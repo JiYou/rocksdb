@@ -2120,13 +2120,6 @@ void VersionStorageInfo::GetOverlappingInputs(
             return user_cmp->Compare(k, file_start) < 0;
           }) - files);
       }
-
-      std::cout << " >>-----------------------------" << std::endl;
-      std::cout << " >> hint_index = " << hint_index << std::endl;
-      std::cout << " >> num_files = " << num_files << std::endl;
-      std::cout << " >> start_index = " << start_index << std::endl;
-      std::cout << " >> end_index = " << end_index << std::endl;
-      std::cout << " >> inputs.size() = " << inputs->size() << std::endl;
       assert((end_index - start_index) == (int)inputs->size());
       // end of my
     }
@@ -2367,43 +2360,6 @@ void VersionStorageInfo::ExtendFileRangeOverlappingInterval(
     } else {
       break;
     }
-  }
-  // check the range
-  for (int i = *start_index; i<= *end_index; i++) {
-    const FdWithKeyRange* f = &files[i];
-    auto& smallest = f->file_metadata->smallest;
-    auto& largest = f->file_metadata->largest;
-    auto s = sstableKeyCompare(user_cmp, smallest, begin);
-
-    if (begin)
-      assert (s == user_cmp->Compare(smallest.user_key(), begin->user_key()));
-    auto e = sstableKeyCompare(user_cmp, begin, largest);
-    if (begin)
-      assert (e == user_cmp->Compare(begin->user_key(), largest.user_key()));
-
-    auto fstr = [](int ex) {
-      if (ex == 0) {
-        return "==";
-      }
-      if (ex < 0) {
-        return "<";
-      }
-      return ">";
-    };
-    std::cout << "i = " << i << " [lower " << fstr(s)  << " begin " << fstr(e)  << " upper]" << std::endl;
-
-    s = sstableKeyCompare(user_cmp, smallest, end);
-    e = sstableKeyCompare(user_cmp, end, largest);
-    std::cout << "i = " << i << " [lower " << fstr(s)  << " end " << fstr(e)  << " upper]" << std::endl;
-
-  }
-  std::cout << "start_index = " << *start_index << std::endl;
-  std::cout << "end_index = " << *end_index+1 << std::endl;
-  if (!begin) {
-    std::cout << "begin is empty" << std::endl;
-  }
-  if (!end) {
-    std::cout << "end is empty" << std::endl;
   }
   assert(count == *end_index - *start_index + 1);
 }
