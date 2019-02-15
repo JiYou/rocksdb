@@ -2283,11 +2283,6 @@ void VersionStorageInfo::GetOverlappingInputsRangeBinarySearch(
   if (within_interval) {
     ExtendFileRangeWithinInterval(level, begin, end, mid,
                                   &start_index, &end_index);
-  } else {
-    ExtendFileRangeOverlappingInterval(level, begin, end, mid,
-                                       &start_index, &end_index);
-    assert(end_index >= start_index);
-
     {
       // bein my check
       begin = old_begin;
@@ -2364,9 +2359,11 @@ void VersionStorageInfo::GetOverlappingInputsRangeBinarySearch(
         assert(start_index == s_start_index);
         assert(end_index+1 == s_end_index);
       }
-
-
     }
+  } else {
+    ExtendFileRangeOverlappingInterval(level, begin, end, mid,
+                                       &start_index, &end_index);
+    assert(end_index >= start_index);
   }
   // insert overlapping files into vector
   for (int i = start_index; i <= end_index; i++) {
