@@ -2348,8 +2348,19 @@ void VersionStorageInfo::GetOverlappingInputsRangeBinarySearch(
         std::cout << " >> -----------------" << std::endl;
         std::cout << " >> start_index = " << s_start_index << std::endl;
         std::cout << " >> end_index = " << s_end_index << std::endl;
+        std::cout << " >> num_files = " << num_files << std::endl;
         std::cout << " << end_index = " << end_index + 1 << std::endl;
         std::cout << " << start_index = " << start_index << std::endl;
+        for (int i = start_index; i < (end_index+1); i++) {
+          Slice file_limit = files[i].file_metadata->largest.user_key();
+          Slice file_start = files[i].file_metadata->smallest.user_key();
+          if (end) {
+            auto ret = user_cmp->Compare(end->user_key(), file_limit);
+            std::cout << "i = " << i << " , compare file_limit ret = " << ret << std::endl;
+            ret = user_cmp->Compare(begin->user_key(), file_start);
+            std::cout << "i = " << i << " , compare file_start ret = " << ret << std::endl;
+          }
+        }
         assert(start_index == s_start_index);
         assert(end_index+1 == s_end_index);
       }
