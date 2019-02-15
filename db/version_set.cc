@@ -2208,14 +2208,6 @@ void VersionStorageInfo::GetCleanInputsWithinInterval(
     return;
   }
 
-  const auto& level_files = level_files_brief_[level];
-  if (begin == nullptr) {
-    begin = &level_files.files[0].file_metadata->smallest;
-  }
-  if (end == nullptr) {
-    end = &level_files.files[level_files.num_files - 1].file_metadata->largest;
-  }
-
   GetOverlappingInputsRangeBinarySearch(level, begin, end, inputs,
                                         hint_index, file_index,
                                         true /* within_interval */);
@@ -2238,6 +2230,16 @@ void VersionStorageInfo::GetOverlappingInputsRangeBinarySearch(
   int max = static_cast<int>(files_[level].size()) - 1;
   bool foundOverlap = false;
   auto user_cmp = user_comparator_;
+  auto old_begin = begin;
+  auto old_end = end;
+
+  const auto& level_files = level_files_brief_[level];
+  if (begin == nullptr) {
+    begin = &level_files.files[0].file_metadata->smallest;
+  }
+  if (end == nullptr) {
+    end = &level_files.files[level_files.num_files - 1].file_metadata->largest;
+  }
 
   // if the caller already knows the index of a file that has overlap,
   // then we can skip the binary search.
@@ -2285,6 +2287,75 @@ void VersionStorageInfo::GetOverlappingInputsRangeBinarySearch(
     ExtendFileRangeOverlappingInterval(level, begin, end, mid,
                                        &start_index, &end_index);
     assert(end_index >= start_index);
+
+    {
+      // bein my check
+      begin = old_begin;
+      end = old_end;
+      const auto &files = level_files_brief_[level].files;
+      const int num_files = level_files_brief_[level].num_files;
+      int s_start_index = 0;
+      int s_end_index = num_files;
+
+      if (begin) {
+        const Slice user_begin = begin->user_key();
+        s_start_index = static_cast<int>(std::lower_bound(files,
+          files + (hint_index == -1 ? num_files: hint_index),
+          user_begin, [&user_cmp](const FdWithKeyRange& f, const Slice &k) {
+            Slice file_start = f.file_metadata->smallest.user_key();
+            return user_cmp->Compare(file_start, k) < 0;
+          }) - files);
+        std::cout << "before cut off: s_start_index = " << s_start_index << std::endl;
+
+        // begin to cut off.
+        if (s_start_index > 0) {
+          // check the front part is overlapping?
+          bool is_overlapping = true;
+          while (is_overlapping && s_start_index < num_files) {
+            Slice pre_limit = files[s_start_index-1].file_metadata->largest.user_key();
+            Slice cur_start = files[s_start_index].file_metadata->smallest.user_key();
+            is_overlapping = user_cmp->Compare(pre_limit, cur_start) == 0;
+            s_start_index += is_overlapping;
+          }
+        }
+
+        std::cout << "after cut off: s_start_index = " << s_start_index << std::endl;
+      }
+
+      if (end) {
+        const Slice user_end = end->user_key();
+        s_end_index = static_cast<int>(std::upper_bound(
+          files + start_index,
+          files + num_files,
+          user_end, [&user_cmp,&end](const Slice& k, const FdWithKeyRange& f) {
+            Slice file_limit = f.file_metadata->largest.user_key();
+            return user_cmp->Compare(k, file_limit) < 0;
+          }) - files);
+        std::cout << "before cut off: s_end_index = " << s_end_index << std::endl;
+        if (s_end_index < num_files) {
+          bool is_overlapping = true;
+          while (is_overlapping && s_end_index > s_start_index) {
+            Slice next_start = files[s_end_index].file_metadata->smallest.user_key();
+            Slice cur_limit = files[s_end_index-1].file_metadata->largest.user_key();
+            is_overlapping = user_cmp->Compare(cur_limit, next_start) == 0;
+            s_end_index -= is_overlapping;
+          }
+        }
+        std::cout << "after cut off: s_end_index = " << s_end_index << std::endl;
+      }
+
+      if (s_end_index > s_start_index) {
+        std::cout << " >> -----------------" << std::endl;
+        std::cout << " >> start_index = " << s_start_index << std::endl;
+        std::cout << " >> end_index = " << s_end_index << std::endl;
+        std::cout << " << end_index = " << end_index + 1 << std::endl;
+        std::cout << " << start_index = " << start_index << std::endl;
+        assert(start_index == s_start_index);
+        assert(end_index+1 == s_end_index);
+      }
+
+
+    }
   }
   // insert overlapping files into vector
   for (int i = start_index; i <= end_index; i++) {
