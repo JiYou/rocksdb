@@ -67,6 +67,23 @@
 #include "util/string_util.h"
 #include "utilities/merge_operators.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <iostream>
+#include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <random>
+#include <thread>
+#include "global/global_init.h"
+#include "common/ceph_argparse.h"
+#include "include/stringify.h"
+#include "include/scope_guard.h"
+#include "common/errno.h"
+#include <gtest/gtest.h>
+
+#include "os/bluestore/BlueFS.h"
+
 namespace ROCKSDB_NAMESPACE {
 
 // Note that whole DBTest and its child classes disable fsync on files

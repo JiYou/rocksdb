@@ -34,6 +34,8 @@
 
 cmake_minimum_required(VERSION 3.5.1)
 
+add_definitions(-std=c++17)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 include(ReadVersion)
 get_rocksdb_version(rocksdb_VERSION)
@@ -84,7 +86,7 @@ else()
 endif()
 
 if( NOT DEFINED CMAKE_CXX_STANDARD )
-  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 include(CMakeDependentOption)
@@ -1050,6 +1052,8 @@ if(WITH_TESTS OR WITH_BENCHMARK_TOOLS)
   test_util/testharness.cc)
   target_link_libraries(testharness gtest)
 endif()
+
+set(CMAKE_CXX_FLAGS "-W")
 
 if(WITH_TESTS)
   set(TESTS
