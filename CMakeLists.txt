@@ -1261,6 +1261,14 @@ if(WITH_TESTS)
   )
 
   foreach(sourcefile ${TESTS})
+      include_directories(/ceph/ceph/build/boost/include)
+      include_directories(/ceph/ceph/build/src/include)
+      include_directories(/ceph/ceph/src)
+      include_directories(/ceph/ceph/build/include)
+      include_directories(/ceph/ceph/src/xxHash)
+      include_directories(/ceph/ceph/src/rapidjson/include)
+      include_directories(/ceph/ceph/src/fmt/include)
+      link_directories(/ceph/ceph/build/lib)
       get_filename_component(exename ${sourcefile} NAME_WE)
       add_executable(${CMAKE_PROJECT_NAME}_${exename}${ARTIFACT_SUFFIX} ${sourcefile})
       set_target_properties(${CMAKE_PROJECT_NAME}_${exename}${ARTIFACT_SUFFIX}
@@ -1269,7 +1277,7 @@ if(WITH_TESTS)
         EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
         OUTPUT_NAME ${exename}${ARTIFACT_SUFFIX}
       )
-      target_link_libraries(${CMAKE_PROJECT_NAME}_${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} testharness gtest ${THIRDPARTY_LIBS} ${ROCKSDB_LIB})
+      target_link_libraries(${CMAKE_PROJECT_NAME}_${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} testharness gtest ${THIRDPARTY_LIBS} ${ROCKSDB_LIB} snappy lz4 z aio fuse ceph-common json_spirit common_utf8 erasure_code crc32 arch fmtd blkid crypto udev ibverbs rdmacm rt resolv pthread dl  )
       if(NOT "${exename}" MATCHES "db_sanity_test")
         add_test(NAME ${exename} COMMAND ${exename}${ARTIFACT_SUFFIX})
         add_dependencies(check ${CMAKE_PROJECT_NAME}_${exename}${ARTIFACT_SUFFIX})
